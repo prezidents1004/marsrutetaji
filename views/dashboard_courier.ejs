@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Colt</title>
+    <link rel="icon" type="image/png" href="penzis.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style4_dashboard_courier.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jost&display=swap&subset=latin,latin-ext" rel="stylesheet">
+
+</head>
+<body>
+
+
+<div class="container">
+
+    <div class="main" id="greetingBox">
+        <h1>Kurjers</h1> <!-- Mainīts virsraksts -->
+        <% if (user && user.name && user.surname) { %>
+            <p>Name: <%= user.name %></p> <!-- Pievienots Vārds lauks -->
+            <p>Surname: <%= user.surname %></p> <!-- Pievienots Uzvārds lauks -->
+        <% } else { %>
+            <p>Name: Viesis</p>
+            <p>Surname: Nav</p>
+        <% } %>
+
+
+        <form action="/logout" method="post" class="logout-form">
+            <button type="submit" class="logout-button">Logout</button>
+        </form>
+
+
+    </div>
+
+    <div class="main" id="activeOrders">
+        <h1>Assigned Deliveries</h1>
+        <div class="delivery-info">
+            <% if (assignedDeliveries.length > 0) { %>
+                <% assignedDeliveries.forEach(function(delivery) { %>
+                    <div class="assigned-order">
+                        <p><strong>Delivery File:</strong> <%= delivery.deliveryFile %></p>
+                        <form action="/completeDelivery" method="post">
+                            <input type="hidden" name="deliveryFile" value="<%= delivery.deliveryFile %>">
+                            <!-- You don't need to pass the username in the form; it will be extracted from the JWT on the server-side -->
+
+                            <button type="submit" class="complete-button">Aprēķināt maršrutu</button>
+                        </form>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <p class="no-deliveries">No assigned deliveries.</p>
+            <% } %>
+        </div>
+    </div>
+
+
+    <div class="main" id="routeShowText">
+
+        <h1>Order Info</h1>
+
+
+
+
+        <div class="dropdown-container">
+            <label for="createRoute">Atlasi maršrutu:</label>
+            <select id="createRoute">
+                <option value="" selected disabled>Select a route</option> <!-- New line added for blank selection -->
+                <% assignedDeliveries
+                        .sort((a, b) => {
+                            const getDateFromFileName = (fileName) => {
+                                const match = fileName.match(/(\d{2})_(\d{2})_(\d{4})\.csv/);
+                                if (match) {
+                                    const [, day, month, year] = match;
+                                    return new Date(`${year}-${month}-${day}`);
+                                }
+                                return null;
+                            };
+
+                            const dateA = getDateFromFileName(a.deliveryFile);
+                            const dateB = getDateFromFileName(b.deliveryFile);
+
+                            return dateA - dateB;
+                        })
+                .forEach(function(delivery) { %>
+                    <option value="<%= delivery.deliveryFile %>"><%= delivery.deliveryFile %></option>
+                <% }); %>
+            </select>
+        </div>
+
+        <div id="routeSeperator"></div>
+
+        <div id="routeInfoContainer"></div>
+
+    </div>
+
+
+</div>
+
+<script>
+    $(function() {
+        $('#deliveryDate').datepicker({
+            dateFormat: 'dd/mm/yy'
+        });
+        $('#deliveryTimeStart, #deliveryTimeEnd').timepicker({
+            timeFormat: 'HH:mm',
+            interval: 30,
+            minTime: '08:00',
+            maxTime: '22:00',
+            startTime: '08:00',
+            dynamic: false,
+            dropdown: true,
+            scrollbar: true
+        });
+    });
+
+
+
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        // Function to parse DD/MM/YYYY formatted strings into Date objects
+        function parseDate(str) {
+            var parts = str.split('/');
+            return new Date(parts[2], parts[1] - 1, parts[0]);
+        }
+
+        // Function to sort options based on date
+        function sortDateOptions() {
+            var select = $('#createRoute');
+            var options = $('#createRoute option:not(:first)'); // Exclude the first option if it's a placeholder
+
+            options.sort(function(a, b) {
+                var dateA = parseDate($(a).text());
+                var dateB = parseDate($(b).text());
+                return dateA - dateB;
+            });
+
+            select.empty().append(options); // Clear and append sorted options
+            select.prepend('<option value="" selected disabled>Select a route</option>'); // Add back the placeholder if needed
+        }
+
+        // Call the sorting function
+        sortDateOptions();
+    });
+</script>
+
+
+<!--
+<div class="dropdown-container">
+    <label for="deliveryFileSelect">Atlasi maršrutu:</label>
+    <select id="deliveryFileSelect">
+        <% assignedDeliveries.forEach(function(delivery) { %>
+            <option value="<%= delivery.deliveryFile %>"><%= delivery.deliveryFile %></option>
+        <% }); %>
+    </select>
+</div>
+-->
+
+<!--
+<button id="createRoute">Vizualizēt Maršrutu</button>
+-->
+
+<div class="containerbig">
+
+        <div id="map"></div> </div>
+
+
+
+<!-- Include jQuery UI library -->
+        <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+        <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJ8yFFMQ5kNg_-FQR9dw42ut3qGDGKXRU&callback=initMap" async defer></script>
+
+
+
+
+
+
+
+        <script>
+            let map;
+            let directionsRenderer;
+
+            function initMap() {
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: { lat: 56.946285, lng: 24.105078 }, // Latitude and Longitude of Ķīpsalas iela 6A
+                    zoom: 14,
+                });
+
+                directionsRenderer = new google.maps.DirectionsRenderer();
+                directionsRenderer.setMap(map);
+            }
+
+            document.getElementById('createRoute').addEventListener('change', function () {
+                var selectedFile = document.getElementById('createRoute').value;
+                loadDeliveriesForCourier(selectedFile);
+            });
+
+            function loadDeliveriesForCourier(selectedFile) {
+                $.ajax({
+                    url: '/getDeliveriesForKurjers?file=' + selectedFile,
+                    method: 'GET',
+                    success: function (response) {
+                        // Atjauniniet karti ar jaunajiem maršrutiem
+                        updateMapWithNewData(response.addresses);
+                    },
+                    error: function (err) {
+                        console.error('Error loading deliveries:', err);
+                    }
+                });
+            }
+
+            const separator = document.createElement('hr');
+
+            function updateMapWithNewData(deliveryAddresses) {
+                // Clear existing directions
+                directionsRenderer.setMap(null);
+
+                // Assuming map and directionsRenderer are already initialized
+                const directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer();
+                directionsRenderer.setMap(map);
+
+                // Filter out undefined and empty string values from deliveryAddresses
+                const sanitizedAddresses = deliveryAddresses
+                    .filter(address => address !== undefined && address.trim() !== '');
+
+                // Check if there are any valid addresses
+                if (sanitizedAddresses.length > 0) {
+                    const startingPoint = "Ķīpsalas iela 6A";
+                    const destinationPoint = startingPoint; // Use the first address as the destination
+
+                    // Construct waypoints array with explicit names (excluding destinationPoint)
+                    let waypoints = sanitizedAddresses.map(address => ({ location: address, stopover: true }));
+
+                    let totalDistance = 0;
+                    let totalDuration = 0;
+
+                    // Flag to print the route scheme only once
+                    let printRouteScheme = true;
+
+                    directionsService.route({
+                        origin: startingPoint,
+                        destination: destinationPoint,
+                        waypoints: waypoints,
+                        optimizeWaypoints: false,
+                        travelMode: google.maps.TravelMode.DRIVING,
+                    }, (response, status) => {
+                        console.log('Response:', response);
+                        console.log('Status:', status);
+
+                        if (status === google.maps.DirectionsStatus.OK) {
+                            directionsRenderer.setDirections(response);
+
+                            // Log the route information with names and from-to points
+                            const routeInfoContainer = document.getElementById('routeInfoContainer');
+                            routeInfoContainer.innerHTML = ''; // Clear previous content
+
+                            const routeLocations = [];
+                            let prevLocation = null;
+
+                            response.routes[0].legs.forEach((leg, index) => {
+                                const startPoint = index === 0 ? startingPoint : sanitizedAddresses[index - 1];
+                                const endPoint = index === sanitizedAddresses.length ? destinationPoint : sanitizedAddresses[index];
+                                const pointToPointDistance = leg.distance.value;
+                                const pointToPointDuration = leg.duration.value;
+                                totalDistance += pointToPointDistance;
+                                totalDuration += pointToPointDuration;
+
+                                // Add locations to the array, excluding consecutive duplicates
+                                if (startPoint !== endPoint) {
+                                    if (prevLocation !== null && prevLocation !== endPoint) {
+                                        routeLocations.push(endPoint);
+                                    } else {
+                                        routeLocations.push(startPoint, endPoint);
+                                    }
+                                    prevLocation = endPoint;
+                                }
+
+
+
+                                const routeInfo = document.createElement('p');
+                                routeInfo.innerHTML = `${startPoint}<span style="color: green;"> -> </span>${endPoint}: Distance - ${leg.distance.text}, Estimated Time - ${leg.duration.text}`;
+                                routeInfoContainer.appendChild(routeInfo);
+                            });
+
+
+
+
+
+
+
+
+                            // Print the route scheme only once at the top
+                            if (printRouteScheme) {
+                                const routeScheme = document.createElement('p');
+                                routeScheme.innerHTML = routeLocations
+                                    .map((location, index, array) => index > 0 ? `<span style="color: green;">-></span> ${location} ` : location)
+                                    .join('');
+                                routeInfoContainer.insertBefore(separator, routeInfoContainer.firstChild);
+                                routeInfoContainer.insertBefore(routeScheme, routeInfoContainer.firstChild);
+
+                                printRouteScheme = false;
+                            }
+
+
+
+
+
+
+                            //routeInfoContainer.appendChild(separator);
+
+                            // Display total distance and duration
+                            const totalInfo = document.createElement('p');
+                            totalInfo.textContent = `Total Distance - ${(totalDistance / 1000).toFixed(2)} km, Total Duration - ${formatDuration(totalDuration)}`;
+
+                            const separator2 = document.createElement('hr');
+                            routeInfoContainer.appendChild(separator2);
+                            routeInfoContainer.appendChild(totalInfo);
+
+
+
+// Add separator line
+
+
+                        } else {
+                            console.error('Directions request failed due to ' + status);
+                        }
+                    });
+                } else {
+                    console.warn('Insufficient valid addresses to display the route.');
+                }
+            }
+
+            // Function to format duration in HH:mm:ss
+            function formatDuration(durationInSeconds) {
+                const hours = Math.floor(durationInSeconds / 3600);
+                const minutes = Math.floor((durationInSeconds % 3600) / 60);
+                const seconds = durationInSeconds % 60;
+                return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        </script>
+
+
+    </div>
+
+
+</div>
+</body>
+</html>

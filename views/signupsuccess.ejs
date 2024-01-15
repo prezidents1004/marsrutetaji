@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Colt</title>
+    <link rel="stylesheet" type="text/css" href="/css/style2.css">
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="main">
+
+    <div class="signupsuccess">
+        <form action="/" method="GET">
+            <!--
+            <meta http-equiv = "refresh" content = "5; url = http://localhost:5000/" />
+            -->
+
+            <label for="chk" aria-hidden="true">Sign up succesful!</label>
+            <button id="returnHome">Return home</button>
+
+
+            <p>This page will redirect in <span class="space"></span><span id="countdown"> 5 </span><span class="space"></span> seconds</p>
+        </form>
+
+
+
+
+    </div>
+
+    <script>
+        const returnHomeButton = document.getElementById('returnHome');
+        const countdownSpan = document.getElementById('countdown');
+        let countdownValue = 5;
+
+        function startCountdown() {
+            const countdownInterval = setInterval(() => {
+                countdownValue--;
+                countdownSpan.textContent = ' ' + countdownValue + ' ';
+
+                if (countdownValue === 0) {
+                    clearInterval(countdownInterval);
+                    window.location.href = '/';
+                }
+            }, 1000);
+        }
+
+        window.onload = startCountdown;
+        returnHomeButton.addEventListener('click', startCountdown);
+    </script>
+
+
+    <input type="checkbox" id="chk" aria-hidden="true">
+
+
+</div>
+</body>
+</html>

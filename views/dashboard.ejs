@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Dashboard</title>
+    <link rel="icon" type="image/png" href="penzis.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style4_dashboard.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.js"></script>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jost&display=swap&subset=latin,latin-ext" rel="stylesheet">
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJ8yFFMQ5kNg_-FQR9dw42ut3qGDGKXRU&libraries=places"></script>
+
+    <style>
+        /* Add custom styles to control the size of the error message container */
+        #addressValidationFeedback {
+            max-height: 20px;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        input:disabled {
+            background: black;
+            color: #888;
+        }
+
+        .floating-message {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+            display: none; /* Initially hide the message */
+        }
+
+        .floating-message.show {
+            display: block; /* Show the message when the 'show' class is added */
+        }
+
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="main" id="greetingBox">
+        <h1>User</h1>
+        <% if (user && user.name && user.surname) { %>
+            <p>Name: <%= user.name %></p>
+            <p>Surname: <%= user.surname %></p>
+        <% } else { %>
+            <p>Name: Viesis</p>
+            <p>Surname: Nav</p>
+        <% } %>
+        <form action="/logout" method="post" class="logout-form">
+            <button type="submit" class="logout-button">Logout</button>
+        </form>
+    </div>
+
+    <div class="main" id="activeOrders">
+        <h1>Active Orders</h1>
+        <div class="delivery-info" id="deliveriesList"></div>
+    </div>
+
+    <div class="main">
+        <h1>Create Order</h1>
+        <form id="deliveryForm">
+            <label for="address">Address:</label>
+            <input type="text" id="address" name="address" required oninput="validateAddress()" autocomplete="off">
+            <!-- Add a feedback element for address validation -->
+            <div id="addressValidationFeedback" style="color: red;"></div>
+
+            <label for="deliveryDate">Delivery Date:</label>
+            <input type="text" id="deliveryDate" name="deliveryDate" required autocomplete="off" disabled>
+
+            <label for="deliveryTimeStart">Delivery Time Start:</label>
+            <input type="text" id="deliveryTimeStart" name="deliveryTimeStart" required autocomplete="off" disabled>
+
+            <label for="deliveryTimeEnd">Delivery Time End:</label>
+            <input type="text" id="deliveryTimeEnd" name="deliveryTimeEnd" required autocomplete="off" disabled>
+
+            <button type="button" onclick="saveDeliveryInfo()">Save Delivery Info</button>
+        </form>
+    </div>
+
+</div>
+
+<script>
+    $(function () {
+        // Initialize the date picker
+        $('#deliveryDate').prop('disabled', true).datepicker({
+            dateFormat: 'dd/mm/yy',
+            minDate: 0,
+            onSelect: function () {
+                // Enable the start time input field when a date is selected
+                $('#deliveryTimeStart').prop('disabled', false).focus();
+
+                // Initialize the timepicker for start time
+                $('#deliveryTimeStart').timepicker({
+                    timeFormat: 'HH:mm',
+                    interval: 30,
+                    minTime: '08:00',
+                    maxTime: '21:30',
+                    startTime: '08:00',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true,
+                    change: function (selectedTime) {
+                        var newMinTime = moment(selectedTime, 'HH:mm').add(30, 'minutes').format('HH:mm');
+
+                        // Update minTime of #deliveryTimeEnd when #deliveryTimeStart changes
+                        $('#deliveryTimeEnd').timepicker('option', 'minTime', newMinTime);
+                        $('#deliveryTimeEnd').timepicker('option', 'maxTime', newMinTime);
+                        $('#deliveryTimeEnd').timepicker('setTime', newMinTime);
+                    }
+                });
+
+                // Enable the end time input field when a start time is selected
+                $('#deliveryTimeEnd').prop('disabled', false).focus();
+
+                // Initialize the timepicker for end time
+                $('#deliveryTimeEnd').timepicker({
+                    timeFormat: 'HH:mm',
+                    interval: 30,
+                    minTime: '08:30', // Set initial minTime for end timepicker
+                    maxTime: '22:00',
+                    startTime: '08:00',
+                    dynamic: false,
+                    dropdown: true,
+                    scrollbar: true
+                });
+            }
+        });
+
+        // Initialize the end time picker (initially disabled)
+        $('#deliveryTimeEnd').prop('disabled', true);
+    });
+
+
+
+    // Add an event listener to update minTime of #deliveryTimeEnd when #deliveryTimeStart changes
+    $('#deliveryTimeStart').on('change', function () {
+        var startTime = $('#deliveryTimeStart').val();
+        $('#deliveryTimeEnd').timepicker('option', 'minTime', startTime);
+    });
+
+    function validateAddress() {
+        var address = document.getElementById('address').value;
+
+        // Validate the address using Google Maps Geocoding API
+        var geocoder = new google.maps.Geocoder();
+
+        geocoder.geocode({
+            'address': address
+        }, function (results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                // Valid address, clear validation feedback
+                document.getElementById('addressValidationFeedback').innerText = '';
+
+                // Enable date input field
+                $('#deliveryDate').prop('disabled', false).removeClass('greyed-out');
+            } else {
+                // Invalid address or geocoding service error
+                document.getElementById('addressValidationFeedback').innerText = 'Please enter a valid address.';
+
+                // Disable date and time input fields
+                $('#deliveryDate, #deliveryTimeStart, #deliveryTimeEnd').prop('disabled', true).addClass('greyed-out');
+            }
+        });
+    }
+
+    function saveDeliveryInfo() {
+        var address = document.getElementById('address').value;
+
+        // Validate the address using Google Maps Geocoding API
+        var geocoder = new google.maps.Geocoder();
+
+        geocoder.geocode({
+            'address': address
+        }, function (results, status) {
+            if (status == google.maps.GeocoderStatus.OK) {
+                // Valid address, proceed with saving delivery info
+                document.getElementById('addressValidationFeedback').innerText = ''; // Clear previous validation feedback
+                var form = document.getElementById('deliveryForm');
+                var formData = {
+                    address: form.address.value,
+                    deliveryDate: form.deliveryDate.value,
+                    deliveryTimeStart: form.deliveryTimeStart.value,
+                    deliveryTimeEnd: form.deliveryTimeEnd.value
+                };
+
+                $.ajax({
+                    url: '/saveDeliveryInfo',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function (response) {
+                        console.log('Delivery info saved successfully');
+                        showSuccessMessage("Order successfully placed");
+                        fetchActiveOrders(); // Fetch and update the active orders list
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error saving delivery info:', error);
+                        // Handle errors
+                    }
+                });
+            } else {
+                // Invalid address or geocoding service error
+                document.getElementById('addressValidationFeedback').innerText = 'Invalid address. Please enter a valid address.';
+                console.log("gavno");
+            }
+        });
+    }
+
+    function showSuccessMessage(message) {
+        // Create a floating message element
+        var messageElement = document.createElement('div');
+        messageElement.className = 'floating-message';
+        messageElement.textContent = message;
+
+        // Append the message element to the body
+        document.body.appendChild(messageElement);
+
+        // Display the message
+        messageElement.style.position = 'fixed';
+        messageElement.style.top = '10px';
+        messageElement.style.left = '50%';
+        messageElement.style.transform = 'translateX(-50%)';
+        messageElement.style.backgroundColor = '#4CAF50';
+        messageElement.style.color = '#fff';
+        messageElement.style.padding = '15px';
+        messageElement.style.borderRadius = '5px';
+        messageElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+        messageElement.style.zIndex = '999';
+        messageElement.style.display = 'block';
+
+        // Remove the message element after a certain duration (e.g., 3 seconds)
+        setTimeout(function () {
+            document.body.removeChild(messageElement);
+        }, 3000);
+    }
+    setInterval(fetchActiveOrders, 2000);
+
+    function fetchActiveOrders() {
+        $.ajax({
+            url: '/getUserDeliveries',
+            type: 'GET',
+            success: function (deliveries) {
+                var deliveriesHtml = '';
+                if (deliveries.length > 0) {
+                    deliveriesHtml += '<ul>';
+                    deliveries.forEach(function (delivery) {
+                        deliveriesHtml += '<li>Address: ' + delivery.address + '</li>';
+                        deliveriesHtml += '<li>Delivery Date: ' + delivery.deliveryDate + '</li>';
+                        deliveriesHtml += '<li>Delivery Time Start: ' + delivery.deliveryTimeStart + '</li>';
+                        deliveriesHtml += '<li>Delivery Time End: ' + delivery.deliveryTimeEnd + '</li>';
+                        deliveriesHtml += '<hr>';
+                    });
+                    deliveriesHtml += '</ul>';
+                } else {
+                    deliveriesHtml = '<p class="center-text">No active orders.</p>';
+
+                }
+                $('#deliveriesList').html(deliveriesHtml);
+            },
+            error: function () {
+                console.error('Error fetching deliveries');
+                $('#deliveriesList').html('<p>Error fetching deliveries.</p>');
+            }
+        });
+    }
+
+    // Call this function on document ready to load active orders initially
+    $(document).ready(function () {
+        fetchActiveOrders();
+    });
+</script>
+
+<style>
+    .greyed-out {
+        background: black; /* You can customize the color */
+        color: black;
+    }
+</style>
+</body>
+
+</html>

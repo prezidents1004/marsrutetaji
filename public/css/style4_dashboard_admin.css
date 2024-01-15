@@ -1,0 +1,613 @@
+body {
+    margin: 0;
+    padding: 140px;
+    font-family: 'Jost', sans-serif;
+    background: #323232;
+}
+
+#rolePicker {
+    display: flex;
+    flex-direction: column;
+    width: calc(33.333% - 20px);
+    min-height: 700px; /* Minimum height */
+
+    border-radius: 10px;
+    box-shadow: 5px 20px 50px #000;
+    overflow: hidden;
+    align-items: center;
+}
+#rolePicker h1 {
+    font-size: 2.5em;
+    color: #15cf75;
+    margin-top: 50px; /* Increase this value to push the text down */
+    padding-top: 10px; /* Adjust padding as needed */
+    /* Other styling remains the same */
+}
+
+#rolePicker .role-info {
+    max-height: 100%;
+    width: 500px;
+    overflow-y: scroll;
+    color:white;
+    margin-right: -20px;
+    margin-bottom: 0.5px; /* Adjust margin */
+}
+
+
+
+
+
+
+#activeOrders .delivery-info {
+    color: black;
+    margin-top: 200px;
+    min-height: 100px; /* Adjust the value as needed */
+    width: 100%;
+    overflow-y: auto; /* Scrollable content */
+    padding: 20px; /* Padding for the content */
+    flex-grow: 1; /* Allows the content area to expand */
+}
+
+
+/* Pielāgojam "User Info" kastes stilu */
+#greetingBox {
+    width: calc(33.333% - 20px); /* Saglabājam kastes izmērus nemainīgus */
+    height: 700px;
+    display: flex; /* Izmantojiet flexbox, lai kontrolētu izkārtojumu */
+    flex-direction: column; /* Elementi tiek kārtoti kolonnā */
+    align-items: center; /* Centrē elementus horizontāli */
+    justify-content: flex-start; /* Sāk elementu izkārtojumu no augšas */
+
+}
+
+/* Pielāgojam virsraksta stilu */
+#greetingBox h1 {
+    font-size: 2.5em;
+    color: #15cf75;
+    margin: 20px 0 10px; /* Pievieno nedaudz lielāku atstarpi zem virsraksta */
+    padding-top: 45px; /* Pievieno padding tikai virsrakstam */
+
+}
+
+/* Pielāgojam vārda un uzvārda stilu */
+#greetingBox p {
+    color: white;
+    font-size: 1.2em;
+    margin: 5px 0; /* Neliela atstarpe starp vārdu un uzvārdu */
+    padding-left: 20px; /* Pievieno padding tikai teksta kreisajai pusei */
+    padding-right: 20px; /* Pievieno padding tikai teksta labajai pusei */
+    text-align: left; /* Teksta izlīdzināšana pa kreisi */
+    font-family: 'Open Sans', sans-serif;
+    margin-top: 25px;
+}
+
+/* ... Pārējie stili ... */
+
+#fetchOrdersBtn {
+    font-weight: bold;
+    width: 150px; /* Fixed width */
+    height: 40px; /* Fixed height */
+    margin: 20px 0; /* Fixed margin */
+    padding: 10px; /* Comfortable padding */
+    background-color: #4CAF50; /* Green background */
+    color: white; /* White text */
+    font-size: 1.3em; /* Suitable font size */
+    border: none; /* No border */
+    cursor: pointer; /* Pointer cursor on hover */
+    transition: 0.3s ease; /* Smooth transition for interactions */
+    display: block; /* Block display to occupy the full width */
+    text-align: center; /* Center the text */
+    outline: none; /* No outline */
+    margin-left: 32px;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+
+}
+
+#fetchOrdersBtn:hover {
+    background-color: #504f4f; /* Darker shade of green on hover */
+}
+
+#fetchOrdersBtn:active {
+    background-color: #2e6630; /* Even darker on active/click */
+}
+
+#fetchOrdersBtn:focus {
+    box-shadow: 0 0 3px 2px rgba(70, 130, 180, 0.5); /* Highlight focus */
+}
+
+
+.logout-button {
+    width: 400%; /* Atbilstošs platums */
+    margin-top: 300px; /* Pievieno atstarpi no pēdējā teksta elementa */
+    padding: 0px; /* Atbilstošs padding */
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 1em; /* Atbilstošs fonta izmērs */
+    display: block; /* Nodrošina, ka poga ir bloka līmeņa elements */
+    text-align: center; /* Teksta izlīdzināšana centrā (ja nepieciešams) */
+    transition: .2s ease-in;
+    text-align: center; /* Center text inside the button */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+
+}
+
+
+.logout-form {
+    display: block; /* Makes the form a block-level element */
+    text-align: center; /* Centers its content */
+    width:10%; /* Ensures it takes full width of its parent */
+    margin-top: 20px; /* Adjust spacing as needed */
+    padding-right: 150px; /* Pievieno padding tikai teksta labajai pusei */
+
+}
+/* ... other styles ... */
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start; /* Ja vēlaties, lai kastes būtu vienā augstuma līmenī */
+    gap: 30px; /* Palielināta atstarpe, bet jāņem vērā kopējais platums */
+    width: 100%; /* Palielināts konteinera platums */
+    padding: 0 20px; /* Pievienots sānu padding konteineram, ja nepieciešams */
+    flex-wrap: nowrap; /* Nomainīts uz nowrap, lai visas kastes būtu vienā rindā */
+}
+
+#assignDeliveryBtn {
+    background-color: #4CAF50; /* Primary green color */
+    color: white; /* White text for contrast */
+    padding: 12px 25px; /* Increased padding for more space */
+    font-size: 1em; /* Adjusted font size for balance */
+    border: none; /* No border for a clean look */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+    cursor: pointer; /* Cursor change for interactivity */
+    transition: all 0.3s ease; /* Smooth transition for interactions */
+    display: block; /* Block-level element to take full width */
+    margin: 10px auto; /* Centered with margin */
+    text-align: center; /* Center text inside the button */
+    min-width: 150px; /* Minimum width to avoid compression */
+    box-sizing: border-box; /* Include padding and border in the width */
+}
+
+#assignDeliveryBtn:hover, #assignDeliveryBtn:focus {
+    background-color: #367c2b; /* Darker green for interaction */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3); /* Larger shadow for effect */
+}
+
+#assignDeliveryBtn:active {
+    background-color: #2e6630; /* Even darker on active */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Smaller shadow for pressing effect */
+}
+
+
+
+#activeOrders h1 {
+    font-size: 2.5em;
+    color: #15cf75;
+    margin: 20px 0 10px; /* Pievieno nedaudz lielāku atstarpi zem virsraksta */
+    padding-top: 45px; /* Pievieno padding tikai virsrakstam */
+
+}
+#assignDelivery h1 {
+
+    font-size: 2.5em;
+    color: #15cf75;
+    margin: 20px 0 10px; /* Pievieno nedaudz lielāku atstarpi zem virsraksta */
+    padding-top: 45px; /* Pievieno padding tikai virsrakstam */
+}
+
+
+#activeOrders {
+    display: flex;
+    flex-direction: column;
+    width: calc(33.333% - 20px);
+    min-height: 700px;
+    border-radius: 10px;
+    box-shadow: 5px 20px 50px #000;
+    overflow: hidden;
+    align-items: center;
+
+}
+
+
+
+#activeOrders .delivery-info {
+    color: white;
+    margin-top: -50px; /* Reduced margin-top */
+    width: 100%;
+    overflow-y: auto; /* Scrollable content */
+    padding: 20px;
+    flex-grow: 1; /* Allow content area to expand */
+    margin-left: 50px; /* Reduced margin-top */
+
+}
+
+
+#activeOrders .datepicker-container {
+    margin-top: -40px;
+    margin-bottom: 30px; /* Space below the datepicker and button */
+    padding: 10px;
+    font-size: 0.7em;
+
+}
+
+
+/* Rest of your styles remain unchanged */
+
+.main {
+    width: calc(33.333% - 20px); /* Katra kaste aizņem trešdaļu no konteinera platuma, ņemot vērā atstarpi */
+    height: 700px;
+    background: url("https://doc-08-2c-docs.googleusercontent.com/docs/securesc/68c90smiglihng9534mvqmq1946dmis5/fo0picsp1nhiucmc0l25s29respgpr4j/1631524275000/03522360960922298374/03522360960922298374/1Sx0jhdpEpnNIydS4rnN4kHSJtU1EyWka?e=view&authuser=0&nonce=gcrocepgbb17m&user=03522360960922298374&hash=tfhgbs86ka6divo3llbvp93mg4csvb38") no-repeat center/ cover;
+    border-radius: 10px;
+    box-shadow: 5px 20px 50px #000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative; /* Required for absolute positioning of pseudo-element */
+
+}
+
+
+
+
+/* Existing Styles ... */
+
+.main:before {
+    content: '';
+    position: absolute;
+    top: -50px; /* Shift the oval upwards */
+    left: 0;
+    right: 0;
+    height: 250px; /* Increase the height for a larger oval */
+    background-color: white; /* Oval color */
+    border-radius: 100% / 30%; /* Adjust the horizontal / vertical radius */
+    z-index: -1;
+}
+
+
+
+.main h1 {
+    font-size: 2.5em;
+    color: #15cf75; /* Text color */
+    margin-top: -50px; /* Adjust as needed */
+    padding: 80px 20px; /* Adjust as needed */
+    /* Other styles remain unchanged */
+}
+
+
+/* ... Remaining Styles ... */
+
+.main form input, .main form select {
+    width: 70%; /* Increase width of input boxes */
+    margin: 10px auto; /* Adjust vertical margin */
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    background-color: #f9f9f9;
+}
+
+.main form label {
+    margin-top: 5px;
+
+    font-size: 1em;
+    color: #fff;
+    margin-bottom: 5px; /* Reduce space between label and input */
+    display: block;
+    text-align: center;
+}
+.main form {
+    text-align: center; /* Centering form contents */
+}
+
+
+
+.main form select:focus {
+    outline: none;
+    border-color: #15cf75; /* Highlight color when focused */
+}
+
+/* Style for custom dropdown arrow */
+.main form select::-ms-expand {
+    display: none; /* For IE11 */
+}
+
+
+
+
+#chk{
+    display: none;
+}
+.signup{
+    position: relative;
+    width:100%;
+    height: 100%;
+}
+label{
+    color: #fff;
+    font-size: 2.3em;
+    justify-content: center;
+    display: flex;
+    margin: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: .5s ease-in-out;
+}
+input{
+    width: 60%;
+    height: 20px;
+    background: #e0dede;
+    justify-content: center;
+    display: flex;
+    margin: 20px auto;
+    padding: 10px;
+    border: none;
+    outline: none;
+    border-radius: 5px;
+}
+button{
+    width: 100%;
+    height: 40px;
+    margin: 10px auto;
+    justify-content: center;
+    display: block;
+    color: #fff;
+    /*background: #573b8a;*/
+    background: #15cf75;
+    font-size: 1em;
+    font-weight: bold;
+    margin-top: 50px;
+    outline: none;
+    border: none;
+    border-radius: 5px;
+    transition: .2s ease-in;
+    cursor: pointer;
+}
+button:hover{
+    /*background: #6d44b8;*/
+    background: #504f4f;
+}
+
+.role-button {
+    padding: 5px 10px;
+    margin: 5px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: .2s ease-in;
+    width: 50%;
+}
+
+.kurjers-button {
+    background-color: #4CAF50; /* Green */
+    color: white;
+}
+
+.user-button {
+    background-color: #008CBA; /* Blue */
+    color: white;
+}
+
+.delete-user {
+    background-color: #ff0000; /* Blue */
+}
+
+
+.role-button:hover {
+    opacity: 0.8;
+}
+
+.message {
+    margin-top: 20px;
+    padding: 10px;
+    border-radius: 8px;
+    color: #ffffff;
+    background-color: #4CAF50; /* Zaļa krāsa par veiksmīgu darbību */
+    text-align: center;
+}
+
+.message.error {
+    background-color: #f44336; /* Sarkanā krāsa par kļūdu vai brīdinājumu */
+}
+
+#orderResults {
+    max-height: 100%;
+    overflow-y: scroll;
+    padding-right: 10px; /* Adjust padding */
+    margin-right: 10px; /* Adjust margin */
+    margin-bottom: 0.5px; /* Adjust margin */
+}
+
+
+
+
+.login{
+    height: 460px;
+    background: #eee;
+    border-radius: 60% / 10%;
+    transform: translateY(-150px);
+    transition: .6s ease-in-out;
+}
+.login label{
+    /*color: #573b8a;*/
+    color: #15cf75;
+    transform: scale(.6);
+}
+
+
+
+#chk:checked ~ .login{
+    transform: translateY(-456px);
+}
+#chk:checked ~ .login label{
+    transform: scale(1);
+}
+#chk:checked ~ .signup label{
+    transform: scale(.6);
+}
+
+
+
+
+
+#assignDelivery {
+    display: flex;
+    flex-direction: column;
+    width: calc(33.333% - 20px);
+    margin-bottom:20px;
+}
+#karte {
+    display: flex;
+    flex-direction: column;
+    width: calc(33.333% - 20px);
+    margin-bottom:20px;
+
+
+}
+
+#assignDelivery h1 {
+    font-size: 2.5em; /* Match font size with Active Orders */
+    color: #15cf75;
+    margin: 20px 0 10px; /* Match margin with Active Orders */
+    margin-top:-150px; /* Match padding with Active Orders */
+}
+
+.courier-title-container {
+    font-size: 1.7em; /* Match font size with Active Orders */
+    color: #15cf75;
+    margin: 20px 0 10px; /* Match margin with Active Orders */
+    margin-top: -210px; /* Match padding with Active Orders */
+    padding-bottom: 70px;
+}
+#assignDelivery .assign-info {
+    color: white;
+    width: 100%;
+    padding: 20px;
+    text-align: center;
+    font-size: 1.5em;
+}
+/* divider for fetched orders*/
+.order-divider {
+    border-top: 1px solid #ccc; /* Light grey line */
+    margin-top: 10px;
+    margin-bottom: 10px;
+    margin-right: 30px;
+
+}
+
+#courierSelect {
+    color: black /* Uzstāda teksta krāsu uz balto */
+    /* Saglabājiet pārējos esošos stila atribūtus nemainīgus */
+}
+
+
+#deliverySelect {
+
+    margin: 10px 0;
+    padding: 10px;
+    width: 100%;
+    border-radius: 8px;
+}
+
+#courierList {
+    height:200px;
+    color:white;
+    font-size:1.5em;
+}
+
+#assignDeliveryBtn {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 0.7em;
+}
+
+
+#deliveryinfo {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: 0.3s ease;
+    font-size: 0.7em;
+    height: 100%;
+    width: 100%;
+    font-weight: bold;
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+#deliveryinfo:hover {
+    background: #504f4f;
+}
+
+#assignDeliveryBtn:hover {
+    background: #504f4f;
+}
+
+
+
+.delivery-map-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+}
+.large-datepicker {
+    width: 200px;
+    height: 40px;
+    font-size: 16px; /* Optional: if you also want to increase the font size */
+    border-radius: 8px;
+
+}
+
+.map-and-date-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: 60%; /* Adjust width as needed */
+
+}
+
+#mapContainer {
+    width: 100%; /* Adjust as needed */
+
+}
+
+
+
+
+.date-picker-container {
+    margin-top: 10px; /* Space between map and date picker */
+}
+
+
+#assignDelivery {
+    flex: 0 0 auto; /* Prevents the box from growing and sets it to its content size */
+    width: 520px; /* Adjust as needed */
+}
+
+#kate {
+    flex: 0 0 auto; /* Prevents the box from growing and sets it to its content size */
+    width: 520px; /* Adjust as needed */
+}
+
+#mapContainer {
+
+    flex-grow: 1; /* Allows the map container to take the remaining space */
+    /* Additional styling for the map container */
+}
+
+#map {
+    height: 50px;
+    width: 100%;
+}

@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Colt</title>
+    <link rel="icon" type="image/png" href="penzis.png" />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Jost:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/timepicker/1.3.5/jquery.timepicker.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/style4_dashboard_admin.css">
+
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Jost&display=swap&subset=latin,latin-ext" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="container">
+
+    <div class="main" id="greetingBox">
+        <h1>Admin</h1> <!-- Mainīts virsraksts -->
+        <% if (user && user.name && user.surname) { %>
+            <p>Name: <%= user.name %></p> <!-- Pievienots Vārds lauks -->
+            <p>Surname: <%= user.surname %></p> <!-- Pievienots Uzvārds lauks -->
+        <% } else { %>
+            <p>Name: Viesis</p>
+            <p>Surname: Nav</p>
+        <% } %>
+
+        <form action="/logout" method="post" class="logout-form">
+            <button type="submit" class="logout-button">Logout</button>
+        </form>
+
+
+
+    </div>
+
+
+
+       <div class="main" id="assignDelivery">
+            <h1>Assign Delivery</h1>
+            <form action="/assignDelivery" method="post">
+                <div class="assign-info">
+                    <label for="deliverySelect" class="label-large">Select Delivery:</label>
+                    <select id="deliverySelect" name="deliverySelect">
+                        <% deliveryFiles.forEach(file => { %>
+                            <option value="<%= file %>"><%= file %></option>
+                        <% }); %>
+                    </select>
+
+                    <label for="courierSelect" class="label-large">Select Courier:</label>
+                    <select id="courierSelect" name="courierSelect">
+                        <% users.forEach(function(user) { %>
+                            <% if(user.role === 'kurjers') { %>
+                                <option value="<%= user.user %>"><%= user.user %></option>
+                            <% } %>
+                        <% }); %>
+                    </select>
+                    <button type="button" id="assignDeliveryBtn" onclick="assignDelivery()">Assign Delivery</button>
+                </div>
+            </form>
+
+        </div>
+
+
+
+
+    <div class="main" id="rolePicker">
+
+
+        <h1>Role Manager</h1>
+
+        <div class="role-info">
+            <!-- ... -->
+            <ul>
+                <% users.forEach(user => { %>
+                    <% if (user.role !== 'admin') { %>
+                        <li>
+                            <%= user.user %> (<%= user.role %>)
+                            <!-- Form for setting role to 'kurjers' -->
+                            <form action="/setUserRole" method="post">
+                                <input type="hidden" name="username" value="<%= user.user %>">
+                                <input type="hidden" name="role" value="kurjers">
+                                <button type="submit" class="role-button kurjers-button">Set to Kurjers</button>
+                            </form>
+
+                            <!-- Form for setting role to 'user' -->
+                            <form action="/setUserRole" method="post">
+                                <input type="hidden" name="username" value="<%= user.user %>">
+                                <input type="hidden" name="role" value="user">
+                                <button type="submit" class="role-button user-button">Set to User</button>
+                            </form>
+
+                            <!-- New form for deleting the user -->
+                            <form action="/deleteUser" method="post">
+                                <input type="hidden" name="username" value="<%= user.user %>">
+                                <button type="submit" class="role-button delete-user">Delete User</button>
+                            </form>
+                        </li>
+                    <% } %>
+                <% }); %>
+            </ul>
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<div class="container">
+
+    <div class="main" id="activeOrders">
+        <h1>Delivery Information</h1>
+
+
+
+        <div class="datepicker-container">
+            <label for="deliverySelect2" class="label-large">Select Date:</label>
+            <select id="deliverySelect2" name="deliverySelect2" class="large-datepicker">
+                <% deliveryFiles.forEach(file => { %>
+                    <option value="<%= file %>"><%= file %></option>
+                <% }); %>
+            </select>
+
+        </div>
+
+        <div class="delivery-info" id="roleManagerDeliveryInfo"> <!-- New container for scrolling -->
+
+
+
+            <div id="orderResults"> <!-- Container to display the fetched orders -->
+                <!-- Fetched orders will be displayed here -->
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+
+    <!-- Delivery info -->
+
+    <div class="main" id="assignDelivery">
+        <div class="courier-title-container">
+            <h2>Delivery Couriers</h2>
+        </div>
+        <div class="courier-list-container">
+            <div id="courierList"></div>
+        </div>
+    </div>
+
+
+
+
+
+
+    <!-- Karte -->
+
+    <div class="main" id="karte">
+
+    <div id="mapContainer">
+        <div id="map"></div>
+    </div>
+
+
+    </div>
+
+</div>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+
+
+
+<script>
+    $(document).ready(function() {
+        // Funkcija, kas tiek izsaukta, kad lietotājs nospiež pogu "Find Couriers"
+        $("#deliveryinfo").click(function() {
+            var selectedDelivery = $('#deliverySelect2').val();
+            console.log("fetchDeliveryInfo called with delivery:", selectedDelivery);
+
+            $.ajax({
+                url: '/DeliveryShow',
+                type: 'POST',
+                data: { deliverySelect2: selectedDelivery },
+                success: function(response) {
+                    console.log("Response from server:", response);
+                    $('#courierList').empty();
+                    if (response.couriers && response.couriers.length > 0) {
+                        response.couriers.forEach(function(courier) {
+                            $('#courierList').append('<p>' + courier + '</p>');
+                        });
+                    } else {
+                        $('#courierList').html('<p>No couriers found for this delivery.</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching couriers:", error);
+                    $('#courierList').html('<p>Error fetching couriers.</p>');
+                }
+            });
+        });
+    });
+</script>
+
+
+
+<script>
+    $(document).ready(function() {
+        // Function to show a message (either success or error)
+        function showMessage(message, isSuccess) {
+            var messageElement = document.createElement('div');
+            messageElement.className = 'floating-message';
+            messageElement.textContent = message;
+
+            // Styling
+            messageElement.style.position = 'fixed';
+            messageElement.style.top = '10px';
+            messageElement.style.left = '50%';
+            messageElement.style.transform = 'translateX(-50%)';
+            messageElement.style.padding = '15px';
+            messageElement.style.borderRadius = '5px';
+            messageElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+            messageElement.style.zIndex = '999';
+            messageElement.style.display = 'block';
+            messageElement.style.color = '#fff';
+            messageElement.style.backgroundColor = isSuccess ? '#4CAF50' : '#f44336';
+
+            document.body.appendChild(messageElement);
+
+            setTimeout(function() {
+                document.body.removeChild(messageElement);
+            }, 3000);
+        }
+
+        window.assignDelivery = function() {
+            var deliveryFile = $('#deliverySelect').val();
+            var courier = $('#courierSelect').val();
+
+            $.ajax({
+                url: '/assignDelivery',
+                type: 'POST',
+                data: {
+                    deliverySelect: deliveryFile,
+                    courierSelect: courier
+                },
+                success: function(response) {
+                    console.log(response); // Debugging
+                    if (response.assignmentSuccess) {
+                        showMessage("Courier successfully assigned to delivery!", true);
+                    } else {
+                        showMessage(response.error || "Assignment was not successful.", false);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    showMessage("Error assigning delivery: " + error, false);
+                }
+            });
+        };
+    });
+</script>
+
+
+
+
+
+
+<script>
+    $(document).ready(function() {
+
+        // Function to show the success message
+        function showSuccessMessage(message) {
+            var messageElement = document.createElement('div');
+            messageElement.className = 'floating-message';
+            messageElement.textContent = message;
+
+            document.body.appendChild(messageElement);
+            messageElement.style.position = 'fixed';
+            messageElement.style.top = '10px';
+            messageElement.style.left = '50%';
+            messageElement.style.transform = 'translateX(-50%)';
+            messageElement.style.backgroundColor = '#4CAF50';
+            messageElement.style.color = '#fff';
+            messageElement.style.padding = '15px';
+            messageElement.style.borderRadius = '5px';
+            messageElement.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+            messageElement.style.zIndex = '999';
+            messageElement.style.display = 'block';
+
+            setTimeout(function() {
+                document.body.removeChild(messageElement);
+            }, 3000);
+        }
+
+
+    $(document).ready(function() {
+        // Custom function to parse dates in DD/MM/YYYY format
+        function parseDate(str) {
+            const [day, month, year] = str.split('/');
+            return new Date(year, month - 1, day); // Months are 0-indexed in JavaScript
+        }
+
+        // Function to sort the options in the select dropdowns
+        function sortDateOptions(selectElement) {
+            const options = $(selectElement + ' option').toArray().sort(function(a, b) {
+                const dateA = parseDate($(a).text());
+                const dateB = parseDate($(b).text());
+                return dateA - dateB;
+            });
+            $(selectElement).empty().append(options);
+        }
+
+        // Call the sorting function for both dropdowns
+        sortDateOptions('#deliverySelect2');
+        sortDateOptions('#deliverySelect');
+
+
+        $(function () {
+        // Function to fetch orders and couriers for a given date
+        function fetchOrdersAndCouriersForDate(date) {
+            // Clear previous orders and couriers and show loading state
+            $('#orderResults').html('<p>Loading orders...</p>');
+            $('#courierList').empty().append('<p>Loading couriers...</p>');
+
+            // Make a request to fetch orders for the selected date
+            $.ajax({
+                url: `/fetchOrders?date=${date}`,
+                method: 'GET',
+                success: function (data) {
+                    let htmlContent = '';
+                    if (data && data.deliveries && data.deliveries.length > 0) {
+                        data.deliveries.forEach(function(delivery, index) {
+                            htmlContent += '<div class="order">';
+                            htmlContent += '<p>Client: ' + delivery.name + ' ' + delivery.surname + '</p>';
+                            htmlContent += '<p>Address: ' + delivery.address + '</p>';
+                            htmlContent += '<p>Delivery Date & Time: ' + delivery.deliveryDate + ' ' + delivery.deliveryTimeStart + '-' + delivery.deliveryTimeEnd + '</p>';
+                            htmlContent += '</div>';
+
+                            // Add a divider after each order except the last one
+                            if (index < data.deliveries.length - 1) {
+                                htmlContent += '<div class="order-divider"></div>';
+                            }
+                        });
+                    } else {
+                        htmlContent = '<p>No active orders for this date.</p>';
+                    }
+                    $('#orderResults').html(htmlContent);
+                },
+                error: function (error) {
+                    $('#orderResults').html('<p>Error fetching orders.</p>');
+                }
+            });
+
+            // Make a request to fetch couriers for the selected date
+            $.ajax({
+                url: '/DeliveryShow',
+                type: 'POST',
+                data: { deliverySelect2: date },
+                success: function(response) {
+                    $('#courierList').empty();
+                    if (response.couriers && response.couriers.length > 0) {
+                        response.couriers.forEach(function(courier) {
+                            $('#courierList').append('<p>' + courier + '</p>');
+                        });
+                    } else {
+                        $('#courierList').html('<p>No couriers found for this delivery.</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("Error fetching couriers:", error);
+                    $('#courierList').html('<p>Error fetching couriers.</p>');
+                }
+            });
+
+            // Update the map with new data
+            updateMapWithNewDataForDate(date);
+        }
+
+        // Function to update the map with new data for a given date
+        function updateMapWithNewDataForDate(selectedDate) {
+        $.ajax({
+        url: '/getDeliveriesForDate',
+        method: 'GET',
+        data: { date: selectedDate },
+        success: function(response) {
+        updateMapWithNewData(response.addresses);
+    },
+        error: function(err) {
+        console.error('Error loading deliveries:', err);
+    }
+    });
+    }
+
+        // Handle change event of the new deliverySelect2 dropdown
+        $("#deliverySelect2").on("change", function () {
+        const selectedDate = $(this).val();
+        fetchOrdersAndCouriersForDate(selectedDate);
+    });
+
+    // Optionally, trigger fetching orders and couriers for the initial selected date when the page loads
+        fetchOrdersAndCouriersForDate($("#deliverySelect2").val());
+    });
+        // Function to update the map with new delivery addresses
+        function updateMapWithNewData(deliveryAddresses) {
+        // Clear existing directions
+        directionsRenderer.setMap(null);
+
+        // Assuming map and directionsRenderer are already initialized
+        const directionsService = new google.maps.DirectionsService();
+        directionsRenderer = new google.maps.DirectionsRenderer();
+        directionsRenderer.setMap(map);
+
+        let waypoints = deliveryAddresses.map(address => ({ location: address, stopover: true }));
+
+        directionsService.route({
+        origin: "Ķīpsalas iela 6A",
+        destination: "Ķīpsalas iela 6A",
+        waypoints: waypoints,
+        optimizeWaypoints: true,
+        travelMode: google.maps.TravelMode.DRIVING,
+    }, (response, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+        directionsRenderer.setDirections(response);
+    } else {
+        console.error('Directions request failed due to ' + status);
+    }
+    });}})});
+
+
+
+</script>
+
+
+
+
+
+
+
+
+<!-- Include jQuery UI library -->
+<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAJ8yFFMQ5kNg_-FQR9dw42ut3qGDGKXRU&callback=initMap" async defer></script>
+<style>
+    /* Set the size of the map */
+    #map {
+        height: 100%;
+        width: 100%;
+    }
+</style>
+
+</div>
+
+
+        <script>
+            let map;
+            let directionsRenderer;
+            function initMap() {
+                map = new google.maps.Map(document.getElementById("map"), {
+                    center: { lat: 56.946285, lng: 24.105078 }, // Latitude and Longitude of Ķīpsalas iela 6A
+                    zoom: 14,
+                });
+
+                directionsRenderer = new google.maps.DirectionsRenderer();
+                directionsRenderer.setMap(map);
+            }
+
+            $(function() {
+                $('#deliveryDatePicker').datepicker({
+                    dateFormat: 'dd_mm_yy',
+                    onSelect: function(dateText) {
+                        loadDeliveriesForDate(dateText);
+                    }
+                });
+            });
+
+            function loadDeliveriesForDate(selectedDate) {
+                $.ajax({
+                    url: '/getDeliveriesForDate',
+                    method: 'GET',
+                    data: { date: selectedDate },
+                    success: function(response) {
+                        updateMapWithNewData(response.addresses);
+                    },
+                    error: function(err) {
+                        console.error('Error loading deliveries:', err);
+                    }
+                });
+            }
+
+            function updateMapWithNewData(deliveryAddresses) {
+                // Clear existing directions
+                directionsRenderer.setMap(null);
+
+                // Assuming map and directionsRenderer are already initialized
+                const directionsService = new google.maps.DirectionsService();
+                directionsRenderer = new google.maps.DirectionsRenderer();
+                directionsRenderer.setMap(map);
+
+                let waypoints = deliveryAddresses.map(address => ({ location: address, stopover: true }));
+
+                directionsService.route({
+                    origin: "Ķīpsalas iela 6A",
+                    destination: "Ķīpsalas iela 6A",
+                    waypoints: waypoints,
+                    optimizeWaypoints: true,
+                    travelMode: google.maps.TravelMode.DRIVING,
+                }, (response, status) => {
+                    if (status === google.maps.DirectionsStatus.OK) {
+                        directionsRenderer.setDirections(response);
+                    } else {
+                        console.error('Directions request failed due to ' + status);
+                    }
+                });
+            }
+        </script>
+
+</body>
+</html>
